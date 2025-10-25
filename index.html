@@ -1197,7 +1197,44 @@
 
 
         // 1. Подключение кошелька (вызывается кнопкой)
-        async function connectWallet() {
+    // Функция для инициализации после подключения
+        // (ВОЗВРАЩЕНА НА МЕСТО!)
+        async function initializeApp() {
+             // Эта функция вызывается ТОЛЬКО если кошелек УЖЕ подключен или только что УСПЕШНО подключился
+             try {
+                // Если provider еще не создан (при авто-подключении), создаем его
+                if (!provider) {
+                    provider = new ethers.BrowserProvider(window.ethereum);
+                }
+                signer = await provider.getSigner();
+                // Получаем адрес, даже если он уже был известен, на всякий случай
+                signerAddress = await signer.getAddress(); 
+                isConnected = true; 
+                
+                updateButtonStatus(); // Обновляем кнопку подключения
+
+                // Создаем "связь" с контрактом
+                contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, provider);
+                
+                // Разблокируем ВСЕ кнопки "Купить"
+                buyButtons.forEach(button => {
+                     // Добавим проверку, чтобы не пытаться разблокировать кнопку Connect
+                     if (button.id !== 'connectButton') { 
+                         button.disabled = false;
+                     }
+                 });
+                
+                await fetchAllSharesLeft(); // Загружаем данные для ВСЕХ товаров
+
+             } catch (err) {
+                 console.error("Initialization failed:", err);
+                 isConnected = false;
+                 signerAddress = null;
+                 setFeedbackForAll("Failed to initialize app.");
+                 updateButtonStatus(); // Сбрасываем кнопку подключения
+             }
+        } // Конец функции initializeApp   
+	async function connectWallet() {
             // Эта функция вызывается ТОЛЬКО при НАЖАТИИ кнопки
             if (isConnected) return; // Не подключаться повторно
             
@@ -1406,6 +1443,7 @@
 </body>
 
 </html>
+
 
 
 
