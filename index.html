@@ -1228,6 +1228,11 @@
             button.addEventListener('click', handleBuy);
         });
 
+       // 3. Покупка доли (обработчик для ВСЕХ кнопок)
+        buyButtons.forEach(button => {
+            button.addEventListener('click', handleBuy);
+        });
+
         async function handleBuy(event) {
             if (!signer || !isConnected) {
                 // Ищем feedback для конкретной кнопки
@@ -1240,6 +1245,88 @@
                 }
                 return;
             }
+            
+            // Получаем ID и цену из data-атрибутов кнопки
+            const tokenId = event.target.dataset.tokenId;
+            const item = items.find(i => i.id == tokenId); // Сравниваем как числа
+
+            if (!item) {
+                 console.error("Could not find item config for tokenId:", tokenId);
+                 setFeedbackForAll("Internal error: Item configuration not found.");
+                 return;
+            }
+
+            const amountInput = document.getElementById(item.amountInputId);
+            const buyAmount = amountInput ? amountInput.value : 1; // Берем значение из input'а
+
+            if (buyAmount <= 0) {
+                setFeedbackFor(item.id, "Amount must be > 0");
+                return;
+            }
+
+            const buyButton = document.getElementById(item.buyButtonId); // Находим конкретную кнопку
+
+            try {
+                // --- НАЧАЛО ИЗМЕНЕНИЙ ---
+                buyButton.disabled = true; // Блокируем КОНКРЕТНУЮ кнопку СРАЗУ
+                
+                const pricePerFractionWei = ethers.parseEther(item.priceEth); // Используем цену из item
+                const totalPriceWei = pricePerFractionWei * BigInt(buyAmount);
+
+                const commissionRate = 0.02; // 2% комиссия
+                // Используем BigInt для расчетов
+                const commissionAmountWei = (totalPriceWei * BigInt(Math.round(commissionRate * 10000))) / BigInt(10000); // Умножаем и делим на 10000 для 2 знаков после запятой
+                const amountToArtisanWei = totalPriceWei - commissionAmountWei;
+
+                // Конвертируем обратно в ETH для отображения (округляем до 6 знаков)
+                const totalEth = parseFloat(ethers.formatEther(totalPriceWei)).toFixed(6);
+                const artisanEth = parseFloat(ethers.formatEther(amountToArtisanWei)).toFixed(6);
+                const commissionEth = parseFloat(ethers.formatEther(commissionAmountWei)).toFixed(6);
+
+                setFeedbackFor(item.id, `Preparing: Total ${totalEth} ETH (${artisanEth} to artisan, ${commissionEth} fee)`);
+                // --- КОНЕЦ ИЗМЕНЕНИЙ ---
+
+                // Небольшая пауза, чтобы пользователь увидел сообщение
+                await new Promise(resolve => setTimeout(resolve, 1500)); 
+
+                setFeedbackFor(item.id, "Waiting for MetaMask..."); // Обновляем статус перед вызовом
+
+                const contractWithSigner = contract.connect(signer);
+
+                const tx = await contractWithSigner.buyFraction(item.id, buyAmount, { // Используем item.id
+                    value: totalPriceWei // Важно: Отправляем ВСЮ сумму, т.к. контракт не умеет делить
+                });
+
+                setFeedbackFor(item.id, "Transaction sent! Waiting...");
+                await tx.wait(); // Ждем подтверждения
+
+                setFeedbackFor(item.id, `Success! Bought ${buyAmount} share(s).`);
+                
+                // Обновляем данные ТОЛЬКО для этого товара
+                const available = await contract.getFractionsAvailable(item.id);
+                const sharesLabel = document.getElementById(item.sharesLabelId);
+                if (sharesLabel) {
+                    sharesLabel.innerText = `${Number(available)} / ${item.totalShares} shares available`;
+                }
+                
+                buyButton.disabled = false; // Разблокируем кнопку
+                
+            } catch (err) {
+                console.error(`Buy error for ID ${item.id}:`, err);
+                const reason = err.reason || err.message || "Transaction failed.";
+                 if (reason.includes("insufficient funds")) {
+                     setFeedbackFor(item.id, "Error! Insufficient funds.");
+                } else if (reason.includes("Not enough fractions available")){
+                     setFeedbackFor(item.id, "Error! Not enough shares left.");
+                 } else if (err.code === 'ACTION_REJECTED') {
+                     setFeedbackFor(item.id, "Transaction rejected in MetaMask.");
+                 }
+                 else {
+                     setFeedbackFor(item.id, `Error! ${reason.substring(0, 50)}...`); // Обрезаем длинные ошибки
+                }
+                buyButton.disabled = false; // Разблокируем кнопку при ошибке
+            }
+        }
             
             // Получаем ID и цену из data-атрибутов кнопки
             const tokenId = event.target.dataset.tokenId;
@@ -1322,4 +1409,5 @@
 
     </script>
 </body>
+
 </html>
