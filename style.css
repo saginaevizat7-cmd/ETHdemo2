@@ -1,0 +1,301 @@
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('./Inter/Inter-italic.otf') format('opentype');
+}
+  
+
+body {
+    margin: 0;
+    background-color: rgb(230, 230, 230);
+
+    font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+.header {
+    background-color: rgba(70, 0, 0, 0.942);
+    height: 60px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 3px rgba(98, 0, 0, 0.601);
+    position: fixed;
+    z-index: 1000;
+}
+.yurt-logo {
+    width: 140px;
+
+}
+.header ul {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    list-style-type: none;
+    margin-left: auto;
+    margin-right: auto;
+}
+.header a {
+    text-decoration: none;
+    color: rgb(203, 203, 203);
+    font-size: 15px;
+    font-weight: 700;
+    padding-bottom: 5px;
+    position: relative;
+}
+.header a::after {
+    content: '';
+    position: absolute;
+    bottom: 0; 
+    left: 0;   
+    width: 0;               /* Изначальная ширина 0 (скрыта) */
+    height: 3px;            /* Толщина линии */
+    background-color: rgba(194, 0, 0, 0.634);/* Цвет линии */
+    
+    /* Плавный переход для свойства width */
+    transition: width 0.3s ease-out; 
+}
+
+/* Состояние HOVER: линия появляется слева направо */
+.header a:hover::after {
+    width: 100%;            /* Линия растягивается на 100% */
+}
+.button-connect {
+    width: 130px;
+    height: 38px;
+    border-radius: 10px;
+    border: 0;
+    background-color: rgba(255, 0, 0, 0.316);
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    position: relative;
+    right: 30px;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.button-connect:hover {
+    transform: scale(1.05); /* Увеличение на 5% */
+    box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.159);
+}
+.hero-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    height: 820px;
+    /* background-color: rgba(139, 255, 255, 0.968); */
+}
+.hero-section-txt {
+    font-size: 55px;
+    font-weight: 900;
+    color: rgb(85, 0, 0);
+    position: relative;
+    left: 100px;
+    bottom: 50px;
+
+}
+.shyrdak {
+    width: 450px;
+    position: relative;
+
+    left: 260px;
+}
+.button-explore {
+    width: 200px;
+    height: 66px;
+    border-radius: 20px;
+    border: 0;
+    background-color: rgb(84, 0, 0);
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    position: relative;
+    right: 1010px;
+    top: 200px;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;/* Добавляем плавность для transform */
+}
+.button-explore:hover {
+    transform: scale(1.05); /* Увеличение на 5% */
+    box-shadow: 0 0 10px 5px rgb(84, 0, 0);
+}
+.button-create {
+    width: 200px;
+    height: 66px;
+    border: 1px;
+    border-color: rgb(84, 0, 0);
+    border-radius: 20px;
+    background-color: rgba(0, 0, 0, 0.159);
+    font-size: 20px;
+    font-weight: 700;
+    color: rgb(84, 0, 0);
+    position: relative;
+    right: 970px;
+    top: 200px;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.button-create:hover {
+    transform: scale(1.05); /* Увеличение на 5% */
+    box-shadow: 0 0 10px 5px rgba(84, 0, 0, 0.548);
+}
+.popular-nft-section {
+    width: 100%;
+    height: 765px;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+
+
+    gap: 40px;
+}
+.nft-div {
+    width: 300px;
+    height: 450px;
+    background-color: rgb(244, 244, 244);
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    bottom: 160px;
+
+    /* border: 1px solid rgb(214, 214, 214); */
+
+}
+.nft0001 {
+    width: 255px;
+    height: 250px;
+    box-shadow: 0 0 3px 5px rgba(128, 128, 128, 0.115);
+    border-radius: 10px;
+    position: relative;
+    top: 23px; 
+}   
+.nft0001-name{
+    font-size: 28px;
+    font-weight: 700;
+    color: rgb(0, 0, 0);
+    position: relative;
+    right: 80px;
+    top: 5px;
+}
+.nft0001-text {
+    font-size: 15px;
+    color: rgb(53, 53, 53);
+    position: relative;
+    bottom: 35px;
+    right: 36px;
+}
+.nft0002 {
+    width: 255px;
+    height: 250px;
+    box-shadow: 0 0 3px 5px rgba(128, 128, 128, 0.115);
+    border-radius: 10px;
+    position: relative;
+    top: 23px; 
+}   
+.nft0002-name{
+    font-size: 28px;
+    font-weight: 700;
+    color: rgb(0, 0, 0);
+    position: relative;
+    right: 72px;
+    top: 5px;
+}
+.nft0002-text {
+    font-size: 15px;
+    color: rgb(53, 53, 53);
+    position: relative;
+    bottom: 35px;
+    right: 32px;
+}
+.nft0003 {
+    width: 255px;
+    height: 250px;
+    box-shadow: 0 0 3px 5px rgba(128, 128, 128, 0.115);
+    border-radius: 10px;
+    position: relative;
+    top: 23px; 
+}   
+.nft0003-name{
+    font-size: 28px;
+    font-weight: 700;
+    color: rgb(0, 0, 0);
+    position: relative;
+    right: 70px;
+    top: 5px;
+}
+.nft0003-text {
+    font-size: 15px;
+    color: rgb(53, 53, 53);
+    position: relative;
+    bottom: 35px;
+    right: 48px;
+}
+.nft0004 {
+    width: 255px;
+    height: 250px;
+    box-shadow: 0 0 3px 5px rgba(128, 128, 128, 0.115);
+    border-radius: 10px;
+    position: relative;
+    top: 23px; 
+}   
+.nft0004-name{
+    font-size: 28px;
+    font-weight: 700;
+    color: rgb(0, 0, 0);
+    position: relative;
+    right: 80px;
+    top: 5px;
+}
+.nft0004-text {
+    font-size: 15px;
+    color: rgb(53, 53, 53);
+    position: relative;
+    bottom: 35px;
+    right: 5px;
+}
+
+.button-buy {
+    width: 150px;
+    height: 30px;
+    border-radius: 12px;
+    font-size: 16px;
+    background-color: rgb(84, 0, 0);
+    color: white;
+    font-weight: 700;
+    border: 0;
+    position: relative;
+    right: 15px;
+}
+span {
+    display: flex;
+}
+.summ {
+    color: rgb(84, 0, 0);
+    font-size: 20px;
+    font-weight: 700;
+    position: relative;
+    bottom: 18px;
+}
+.popular {
+    color: rgb(84, 0, 0);
+    font-size: 80px;
+    font-weight: 700;
+    position: relative;
+    left: 100px;
+}
+.c {
+    font-size: small;
+    color: gray;
+    display: flex;
+    justify-content: center;
+}
+.p {
+    font-size: medium;
+    display: flex;
+    justify-content: center;
+    color: black;
+
+    position: relative;
+    bottom: 310px;
+}
