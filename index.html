@@ -383,7 +383,7 @@
         // ==================================================================
         const CONTRACT_ADDRESS = "0x62Fa1EF93ADBA33494975786A9C098eAC77113E8"; 
 
-        const contractABI = [
+        const contractABI =  [
 	{
 		"inputs": [
 			{
@@ -1093,7 +1093,6 @@
 
 
         // --- Описываем наши 4 товара ---
-        // Убедись, что цены здесь СООТВЕТСТВУЮТ ценам, установленным в Remix!
         const items = [
             { id: 1, name: "Kalpak", priceEth: "0.0055", totalShares: 100, sharesLabelId: "sharesLeft_1", feedbackLabelId: "feedback_1", buyButtonId: "buyButton_1", amountInputId: "buyAmount_1", priceLabelSelector: `.price-eth[data-token-id="1"]` },
             { id: 2, name: "Tebetey", priceEth: "0.008",  totalShares: 100, sharesLabelId: "sharesLeft_2", feedbackLabelId: "feedback_2", buyButtonId: "buyButton_2", amountInputId: "buyAmount_2", priceLabelSelector: `.price-eth[data-token-id="2"]` },
@@ -1106,46 +1105,44 @@
         let signer;
         let contract;
         let isConnected = false;
-        let signerAddress = null; // Добавим для отображения
+        let signerAddress = null;
 
         // --- Связываем элементы HTML с JavaScript ---
         const connectButton = document.getElementById('connectButton');
-        const buyButtons = document.querySelectorAll('.buy-button'); // Находим ВСЕ кнопки покупки
+        const buyButtons = document.querySelectorAll('.buy-button'); 
 
         // --- Логика ---
 
         // Запускается после загрузки HTML
         document.addEventListener('DOMContentLoaded', async () => {
-             updateAllPriceLabels(); // Обновляем отображение цен сразу
+             updateAllPriceLabels(); 
              
              if (typeof window.ethereum !== 'undefined') {
-                // Пытаемся автоматически подключиться, если уже разрешено
                 try {
-                    const provider = new ethers.BrowserProvider(window.ethereum); // Временный провайдер для проверки
-                    const accounts = await provider.listAccounts(); // Используем listAccounts()
+                    const tempProvider = new ethers.BrowserProvider(window.ethereum); // Use temp provider
+                    const accounts = await tempProvider.listAccounts(); 
                     if (accounts && accounts.length > 0) {
-                        signerAddress = accounts[0].address; // Получаем адрес сразу
-                        await initializeApp(); // Если разрешено, инициализируем
+                        signerAddress = accounts[0].address; 
+                        // Call initializeApp ONLY if already connected
+                        await initializeApp(); 
                     } else {
                         setFeedbackForAll("Connect your wallet to start."); 
-                        updateButtonStatus(); // Обновляем кнопку в состояние "не подключен"
+                        updateButtonStatus(); 
                     }
                 } catch (err) {
                     console.error("Failed to check pre-connection:", err);
                     setFeedbackForAll("Error checking wallet status.");
-                    updateButtonStatus(); // Обновляем кнопку в состояние "не подключен"
+                    updateButtonStatus(); 
                 }
             } else {
                  setFeedbackForAll("Please install MetaMask.");
-                 updateButtonStatus(); // Обновляем кнопку в состояние "не подключен"
+                 updateButtonStatus(); 
             }
 
-            // Вешаем обработчик на кнопку подключения
             if (connectButton) {
                 connectButton.addEventListener('click', connectWallet);
             }
             
-            // Вешаем обработчик на ВСЕ кнопки покупки
              buyButtons.forEach(button => {
                 button.addEventListener('click', handleBuy);
             });
@@ -1165,114 +1162,81 @@
             }
         }
 
-
+        // --- !!! ВОТ ФУНКЦИЯ initializeApp !!! ---
         // Функция для инициализации после подключения
-// Проверяем статус подключения при загрузке страницы (ИСПРАВЛЕНО)
-        async function checkInitialConnection() {
-             if (typeof window.ethereum !== 'undefined') {
-                try {
-                    const provider = new ethers.BrowserProvider(window.ethereum);
-                    // Проверяем, есть ли уже подключенные аккаунты
-                    const accounts = await provider.listAccounts(); 
-                    if (accounts && accounts.length > 0) {
-                        // Если есть, СРАЗУ ИНИЦИАЛИЗИРУЕМ ПРИЛОЖЕНИЕ
-                        console.log("Already connected:", accounts[0].address); 
-                        await initializeApp(); // <<< --- ВОТ ИСПРАВЛЕНИЕ!
-                    } else {
-                        console.log("Wallet found, but not connected.");
-                        updateButtonStatus(); // Просто обновить кнопку Connect
-                        setFeedbackForAll("Connect your wallet to start."); // Попросить подключиться
-                    }
-                } catch (err) {
-                    console.error("Failed to check initial connection:", err);
-                    updateButtonStatus(); // Показать кнопку Connect
-                    setFeedbackForAll("Error checking wallet status.");
-                }
-            } else {
-                console.log("MetaMask not found on initial check.");
-                updateButtonStatus(); // Показать кнопку Connect
-                setFeedbackForAll("Please install MetaMask.");
-            }
-        } // Конец функции checkInitialConnection (ИСПРАВЛЕНО)
-
-
-        // 1. Подключение кошелька (вызывается кнопкой)
-    // Функция для инициализации после подключения
-        // (ВОЗВРАЩЕНА НА МЕСТО!)
         async function initializeApp() {
-             // Эта функция вызывается ТОЛЬКО если кошелек УЖЕ подключен или только что УСПЕШНО подключился
              try {
-                // Если provider еще не создан (при авто-подключении), создаем его
+                // Ensure provider is set (might be called on load or after connect)
                 if (!provider) {
-                    provider = new ethers.BrowserProvider(window.ethereum);
+                     provider = new ethers.BrowserProvider(window.ethereum);
                 }
                 signer = await provider.getSigner();
-                // Получаем адрес, даже если он уже был известен, на всякий случай
                 signerAddress = await signer.getAddress(); 
                 isConnected = true; 
                 
-                updateButtonStatus(); // Обновляем кнопку подключения
+                updateButtonStatus(); // Update connect button status
 
-                // Создаем "связь" с контрактом
+                // Create contract instance
                 contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, provider);
                 
-                // Разблокируем ВСЕ кнопки "Купить"
+                // Enable buy buttons
                 buyButtons.forEach(button => {
-                     // Добавим проверку, чтобы не пытаться разблокировать кнопку Connect
                      if (button.id !== 'connectButton') { 
                          button.disabled = false;
                      }
                  });
                 
-                await fetchAllSharesLeft(); // Загружаем данные для ВСЕХ товаров
+                await fetchAllSharesLeft(); // Fetch data for ALL items
 
              } catch (err) {
                  console.error("Initialization failed:", err);
                  isConnected = false;
                  signerAddress = null;
                  setFeedbackForAll("Failed to initialize app.");
-                 updateButtonStatus(); // Сбрасываем кнопку подключения
+                 updateButtonStatus(); // Reset connect button
              }
-        } // Конец функции initializeApp   
-	async function connectWallet() {
-            // Эта функция вызывается ТОЛЬКО при НАЖАТИИ кнопки
-            if (isConnected) return; // Не подключаться повторно
+        } // --- !!! КОНЕЦ ФУНКЦИИ initializeApp !!! ---
+
+
+        // 1. Подключение кошелька (вызывается кнопкой)
+        async function connectWallet() {
+            if (isConnected) return; 
             
             if (typeof window.ethereum === 'undefined') {
                 setFeedbackForAll("Please install MetaMask!");
-                return; // Выход 1
+                return; 
             }
             try {
                 setFeedbackForAll("Connecting...");
-                connectButton.textContent = 'Connecting...'; // Обновляем текст кнопки
-                connectButton.disabled = true; // Блокируем на время подключения
+                connectButton.textContent = 'Connecting...'; 
+                connectButton.disabled = true; 
 
-                // Запрашиваем подключение у пользователя явно
+                // Request connection from user
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
                 
-                // Если успешно, инициализируем приложение
+                // If successful, initialize the app
                 await initializeApp(); 
                 
             } catch (err) {
                 console.error("Connection error:", err);
                 isConnected = false;
                 signerAddress = null;
-                 if (err.code === 4001) { // User rejected connection
+                 if (err.code === 4001) { 
                      setFeedbackForAll("Connection rejected. Please connect wallet.");
                 } else {
                      setFeedbackForAll("Failed to connect wallet.");
                 }
-                 updateButtonStatus(); // Сбрасываем кнопку подключения
+                 updateButtonStatus(); // Reset connect button
             }
-            // Нет return здесь
         } // Конец функции connectWallet
 
         // 2. Получение данных для ВСЕХ товаров
         async function fetchAllSharesLeft() {
             if (!contract || !isConnected) {
                 console.log("Cannot fetch shares: contract or connection missing.");
-                setFeedbackForAll("Connect wallet to load data."); // Просим подключиться
-                return; // Выход 2
+                setFeedbackForAll("Connect wallet to load data."); 
+                // Don't disable buy buttons here, maybe connection dropped
+                return; 
             }
             setFeedbackForAll("Fetching available shares...");
 
@@ -1301,12 +1265,11 @@
                         }
                     }
                 });
-                setFeedbackForAll("Data loaded. Ready to buy."); // Общий статус успеха
+                setFeedbackForAll("Data loaded. Ready to buy."); 
             } catch (error) {
                  console.error("Error processing share results:", error);
                  setFeedbackForAll("Error loading share data.");
             }
-            // Нет return здесь
         } // Конец функции fetchAllSharesLeft
 
         // Обновляем цены в HTML из массива items
@@ -1317,7 +1280,6 @@
                      priceLabel.innerText = `Price: ${item.priceEth} ETH / share`;
                 }
             });
-            // Нет return здесь
         } // Конец функции updateAllPriceLabels
 
 
@@ -1326,12 +1288,8 @@
             if (!signer || !isConnected) {
                 const buttonId = event.target.id;
                 const item = items.find(i => i.buyButtonId === buttonId);
-                if (item) {
-                    setFeedbackFor(item.id, "Wallet not connected.");
-                } else {
-                     setFeedbackForAll("Wallet not connected.");
-                }
-                return; // Выход 3
+                setFeedbackFor(item ? item.id : null, "Wallet not connected."); // Provide item ID if found
+                return; 
             }
             
             const tokenId = event.target.dataset.tokenId;
@@ -1340,7 +1298,7 @@
             if (!item) {
                  console.error("Could not find item config for tokenId:", tokenId);
                  setFeedbackForAll("Internal error: Item configuration not found.");
-                 return; // Выход 4
+                 return; 
             }
 
             const amountInput = document.getElementById(item.amountInputId);
@@ -1348,13 +1306,13 @@
 
             if (buyAmount <= 0) {
                 setFeedbackFor(item.id, "Amount must be > 0");
-                return; // Выход 5
+                return; 
             }
 
             const buyButton = document.getElementById(item.buyButtonId); 
 
             try {
-                buyButton.disabled = true; // Блокируем кнопку СРАЗУ
+                buyButton.disabled = true; 
                 
                 const pricePerFractionWei = ethers.parseEther(item.priceEth); 
                 const totalPriceWei = pricePerFractionWei * BigInt(buyAmount);
@@ -1400,7 +1358,7 @@
                      setFeedbackFor(item.id, "Error! Insufficient funds.");
                 } else if (reason.includes("Not enough fractions available")){
                      setFeedbackFor(item.id, "Error! Not enough shares left.");
-                 } else if (err.code === 'ACTION_REJECTED' || err.code === 4001) { // Добавил 4001
+                 } else if (err.code === 'ACTION_REJECTED' || err.code === 4001) { 
                      setFeedbackFor(item.id, "Transaction rejected."); 
                  }
                  else {
@@ -1408,19 +1366,25 @@
                 }
                 buyButton.disabled = false; 
             }
-            // Нет return здесь
         } // Конец функции handleBuy
 
         // Обновление статуса для КОНКРЕТНОГО товара
         function setFeedbackFor(itemId, message) {
+            // Check if itemId is provided before finding
+            if (itemId === null || itemId === undefined) {
+                 console.warn("setFeedbackFor called without itemId");
+                 setFeedbackForAll(message); // Fallback to setting all if ID is missing
+                 return;
+            }
             const item = items.find(i => i.id === itemId);
             if (item) {
                 const feedbackElem = document.getElementById(item.feedbackLabelId);
                 if (feedbackElem) {
                     feedbackElem.innerHTML = `<i>${message}</i>`;
                 }
+            } else {
+                 console.warn(`Could not find feedback element for itemId: ${itemId}`);
             }
-            // Нет return здесь
         } // Конец функции setFeedbackFor
         
         // Обновление статуса для ВСЕХ товаров
@@ -1431,11 +1395,9 @@
                     feedbackElem.innerHTML = `<i>${message}</i>`;
                  }
              });
-             // Нет return здесь
         } // Конец функции setFeedbackForAll
 
-        // Убедимся, что нет кода вне функций
-        console.log("ShyrChain script loaded."); // Добавим лог для проверки
+        console.log("ShyrChain script loaded. (v3 - Final Check)"); 
 
     </script>
 </body>
@@ -1443,6 +1405,7 @@
 </body>
 
 </html>
+
 
 
 
