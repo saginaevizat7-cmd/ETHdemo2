@@ -1167,36 +1167,33 @@
 
 
         // Функция для инициализации после подключения
-        async function initializeApp() {
-             // Эта функция вызывается ТОЛЬКО если кошелек УЖЕ подключен или только что УСПЕШНО подключился
-             try {
-                // Если provider еще не создан (при авто-подключении), создаем его
-                if (!provider) {
-                    provider = new ethers.BrowserProvider(window.ethereum);
+// Проверяем статус подключения при загрузке страницы (ИСПРАВЛЕНО)
+        async function checkInitialConnection() {
+             if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const provider = new ethers.BrowserProvider(window.ethereum);
+                    // Проверяем, есть ли уже подключенные аккаунты
+                    const accounts = await provider.listAccounts(); 
+                    if (accounts && accounts.length > 0) {
+                        // Если есть, СРАЗУ ИНИЦИАЛИЗИРУЕМ ПРИЛОЖЕНИЕ
+                        console.log("Already connected:", accounts[0].address); 
+                        await initializeApp(); // <<< --- ВОТ ИСПРАВЛЕНИЕ!
+                    } else {
+                        console.log("Wallet found, but not connected.");
+                        updateButtonStatus(); // Просто обновить кнопку Connect
+                        setFeedbackForAll("Connect your wallet to start."); // Попросить подключиться
+                    }
+                } catch (err) {
+                    console.error("Failed to check initial connection:", err);
+                    updateButtonStatus(); // Показать кнопку Connect
+                    setFeedbackForAll("Error checking wallet status.");
                 }
-                signer = await provider.getSigner();
-                // Получаем адрес, даже если он уже был известен, на всякий случай
-                signerAddress = await signer.getAddress(); 
-                isConnected = true; 
-                
-                updateButtonStatus(); // Обновляем кнопку подключения
-
-                // Создаем "связь" с контрактом
-                contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, provider);
-                
-                // Разблокируем ВСЕ кнопки "Купить"
-                buyButtons.forEach(button => button.disabled = false);
-                
-                await fetchAllSharesLeft(); // Загружаем данные для ВСЕХ товаров
-
-             } catch (err) {
-                 console.error("Initialization failed:", err);
-                 isConnected = false;
-                 signerAddress = null;
-                 setFeedbackForAll("Failed to initialize app.");
-                 updateButtonStatus(); // Сбрасываем кнопку подключения
-             }
-        }
+            } else {
+                console.log("MetaMask not found on initial check.");
+                updateButtonStatus(); // Показать кнопку Connect
+                setFeedbackForAll("Please install MetaMask.");
+            }
+        } // Конец функции checkInitialConnection (ИСПРАВЛЕНО)
 
 
         // 1. Подключение кошелька (вызывается кнопкой)
@@ -1409,6 +1406,7 @@
 </body>
 
 </html>
+
 
 
 
